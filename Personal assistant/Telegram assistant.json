@@ -1,0 +1,286 @@
+{
+  "name": "Telegram assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are a helpful assistant\n\n## 🧠 AI Agent Prompt: Route Output After Contact Database Node via `calendar Agent' node\n\nYou are an AI automation agent inside an n8n workflow. Your job is to process a message and then pass the output through the next node, which is the `calendar agent` workflow tool. "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        140,
+        0
+      ],
+      "id": "be56e76c-7edc-4a0f-9c96-38261a0a4a26",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        580,
+        0
+      ],
+      "id": "2cd96616-aba7-4656-88a6-9c7cd409c0bb",
+      "name": "Send a text message",
+      "webhookId": "a94517ee-ff5d-4b24-a220-b2a52e97b9e1",
+      "credentials": {
+        "telegramApi": {
+          "id": "TZmmbSW8aHuuflOT",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.from.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        280,
+        240
+      ],
+      "id": "480ea487-fb6e-4d4d-af2d-5eea3a661c9e",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        120,
+        180
+      ],
+      "id": "323ab114-9e8a-4b3b-8a15-dfe95a9618fb",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Sto4g9sD8OQU3SdE",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to take action in the emails of the email agent workflow",
+        "workflowId": {
+          "__rl": true,
+          "value": "aDkYglHYFqFPE53w",
+          "mode": "list",
+          "cachedResultName": "email agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        220
+      ],
+      "id": "3e96bfb5-05d1-4330-b4d1-d0303eae79ab",
+      "name": "Call n8n Workflow Tool"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Woga9eJ3VotZa5OCecLqO365rJ1iNBt2XET3LeCPL08",
+          "mode": "list",
+          "cachedResultName": "PILLZ NFT WL DISTRIBUTION",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Woga9eJ3VotZa5OCecLqO365rJ1iNBt2XET3LeCPL08/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "KINGSDAO(50)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Woga9eJ3VotZa5OCecLqO365rJ1iNBt2XET3LeCPL08/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        420,
+        220
+      ],
+      "id": "5edb889f-659b-47cf-8ba5-e473eb56bb44",
+      "name": "Contact database",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "vUjfdKsFyTv4tw1G",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -40,
+        0
+      ],
+      "id": "95dfbba1-a81d-48d7-911c-6da177fa91b3",
+      "name": "Telegram Trigger",
+      "webhookId": "0e8b88f1-043b-43dc-83d3-c4ecbee4d63c",
+      "credentials": {
+        "telegramApi": {
+          "id": "TZmmbSW8aHuuflOT",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to action in calendar",
+        "workflowId": {
+          "__rl": true,
+          "value": "nhtSZYTJ9qSSsbke",
+          "mode": "list",
+          "cachedResultName": "Calender Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        760,
+        200
+      ],
+      "id": "a9e8b2e6-bf28-475b-bd85-9ef0deaf09a1",
+      "name": "calendarAgent",
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call n8n Workflow Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact database": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "calendarAgent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1fa42c63-33ba-4d31-a176-beaf4d161f55",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "93ea534fcccca1a9a6480fcae69e67fae47cdbdc1d2f2c73a05de7ee28004308"
+  },
+  "id": "1GbPyO27Rmj27Irw",
+  "tags": []
+}

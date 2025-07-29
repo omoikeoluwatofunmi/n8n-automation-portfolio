@@ -1,0 +1,396 @@
+{
+  "name": "RAG Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "27cc1cdd-5ba4-4edf-80f5-3e67a8a56045",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "siXXKsTNPFe0sDD6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.text }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "Customersupport ",
+              "description": "Emails from customers asking questions or making enquiries."
+            },
+            {
+              "category": "Other",
+              "description": "Emails not related to customer support"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "871e00ec-58d4-4843-a210-2edd90b7a874",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        300,
+        220
+      ],
+      "id": "40607d38-ef3e-4c88-8aba-53e645d73126",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "A4XGSTqI6d4lD99Q",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        520,
+        220
+      ],
+      "id": "7d6182ba-5d45-495c-a1c4-ea44ee2f323d",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "# Overview\n\nYou are a helpful assistant, replying enquiries made to my email.\n\n# Instructions\n\nAdd friendly emojis to your response \n\n# Output\n\nOutput the body of the content "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        580,
+        -96.99182434082024
+      ],
+      "id": "94f78a4f-8cb4-4bfd-82b7-55fa312bf284",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        560,
+        80
+      ],
+      "id": "726c0e5d-bd07-4fcb-9e2f-3bf275e8701a",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "A4XGSTqI6d4lD99Q",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Call this tool to access FAQ",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8n",
+          "mode": "list",
+          "cachedResultName": "n8n"
+        },
+        "options": {
+          "pineconeNamespace": "FAQ"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        760,
+        180
+      ],
+      "id": "b651dae5-f085-4a45-a4af-e84bdb9b2efe",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "spLgJQoYRBk1Az3U",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsHuggingFaceInference",
+      "typeVersion": 1,
+      "position": [
+        740,
+        320
+      ],
+      "id": "5130dd3f-0c7a-4003-88a8-2e1f56ffa0c5",
+      "name": "Embeddings HuggingFace Inference",
+      "credentials": {
+        "huggingFaceApi": {
+          "id": "Txiu15tJuulH9Nyo",
+          "name": "HuggingFaceApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": [
+          "IMPORTANT"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        940,
+        -100
+      ],
+      "id": "bba65ac9-59ee-4e05-877f-e1f8e98e8ea3",
+      "name": "Add label to message",
+      "webhookId": "40c2d226-62f6-4485-84f6-9315a737bfbc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "siXXKsTNPFe0sDD6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $json.id }}",
+        "emailType": "text",
+        "message": "={{ $('AI Agent').item.json.output }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1160,
+        -100
+      ],
+      "id": "6b77e45f-de89-4881-b919-9fbc325378c6",
+      "name": "Reply to a message",
+      "webhookId": "c13d47c2-56c4-4da1-b6f0-796c94fa904d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "siXXKsTNPFe0sDD6",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Gmail Trigger": [
+      {
+        "json": {
+          "id": "19811fb14e81cf18",
+          "threadId": "19811fb14e81cf18",
+          "labelIds": [
+            "UNREAD",
+            "CATEGORY_PERSONAL",
+            "INBOX"
+          ],
+          "sizeEstimate": 5725,
+          "headers": {
+            "delivered-to": "Delivered-To: jesutofunmiomoike@gmail.com",
+            "received": "Received: from mail-sor-f41.google.com (mail-sor-f41.google.com. [209.85.220.41])\r\n        by mx.google.com with SMTPS id 2adb3069b0e04-55a1ac6e903sor602787e87.0.2025.07.15.23.45.24\r\n        for <jesutofunmiomoike@gmail.com>\r\n        (Google Transport Security);\r\n        Tue, 15 Jul 2025 23:45:24 -0700 (PDT)",
+            "x-received": "X-Received: by 2002:a05:6512:24d8:20b0:556:2764:d207 with SMTP id\r\n 2adb3069b0e04-55a23375c82mr190255e87.11.1752648322779; Tue, 15 Jul 2025\r\n 23:45:22 -0700 (PDT)",
+            "arc-seal": "ARC-Seal: i=1; a=rsa-sha256; t=1752648324; cv=none;\r\n        d=google.com; s=arc-20240605;\r\n        b=ckZbpXjUMnSmQerkVZcqDbPLQcH8mmq2AjFoDOaZqFr9i/gp1zFyiTBkI/rv3P/4rY\r\n         NRwcCdqT2/I0AoBg85+xCqZN887zuDPXICzhBXbp/oVJSQWnmFs1OAXFkSMvwDk211PT\r\n         FCVuSva7PtpmeiI5AX9STh87nga50onpyn2HFXxZ8873JFyBN3ozdqjepTHD7Q89EUWB\r\n         XfMTi5BTZ506Gx3tohuWwQubVXx+nPvCzu3o6me4LHzKPcElEqh6C9layuxDEcpaW+/D\r\n         SuI3PJJfY8p0tZxBK+/1olEOVP+0ZhcAM6Akf1uQE6jEDEgnoTEpYCRjAYjUMJrO4IAe\r\n         WsOQ==",
+            "arc-message-signature": "ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;\r\n        h=to:subject:message-id:date:from:mime-version:dkim-signature;\r\n        bh=ohqOF59LV9BZtR9gWnEidTemYZxav1bDteQ3QltEewE=;\r\n        fh=7Wod5Y8QUE/eyzfflAt+2jd8cvJEBSMsLQA1uKn/GaM=;\r\n        b=A+MvWmPEAuL6oNTd30eRW5McxUisZHMmZVSdE9uAf+IyHE6gyN2kt2/eM/SR4c/7Gu\r\n         YavFeqFkDrKbrwooEWpgYyBz22kXhVRKVkefNaAx7HaTel63qauUZIX1AVO8/zvUUV6c\r\n         75FDH89l/v1KOhh9plOGmwTwBntYPlxc75yZHZoEXyULJb3saRTj++Rdfa3VMkIbGVUX\r\n         l5dqznlFOHhbCgA9ZGffJHek8iiwnMxlkB1lyp720UsEDYcyWG56ClCD1yhKgZT6dB0M\r\n         5IETeLhAZnjsrRMm/ZFiSZlzgb+wzcBoAjCE0iHggMX69C7EvjUk3lekIzj8ZGVr27qt\r\n         /VQg==;\r\n        dara=google.com",
+            "arc-authentication-results": "ARC-Authentication-Results: i=1; mx.google.com;\r\n       dkim=pass header.i=@gmail.com header.s=20230601 header.b=bONdhu7J;\r\n       spf=pass (google.com: domain of oluwatofunmiomoike@gmail.com designates 209.85.220.41 as permitted sender) smtp.mailfrom=oluwatofunmiomoike@gmail.com;\r\n       dmarc=pass (p=NONE sp=QUARANTINE dis=NONE) header.from=gmail.com;\r\n       dara=pass header.i=@gmail.com",
+            "return-path": "Return-Path: <oluwatofunmiomoike@gmail.com>",
+            "received-spf": "Received-SPF: pass (google.com: domain of oluwatofunmiomoike@gmail.com designates 209.85.220.41 as permitted sender) client-ip=209.85.220.41;",
+            "authentication-results": "Authentication-Results: mx.google.com;\r\n       dkim=pass header.i=@gmail.com header.s=20230601 header.b=bONdhu7J;\r\n       spf=pass (google.com: domain of oluwatofunmiomoike@gmail.com designates 209.85.220.41 as permitted sender) smtp.mailfrom=oluwatofunmiomoike@gmail.com;\r\n       dmarc=pass (p=NONE sp=QUARANTINE dis=NONE) header.from=gmail.com;\r\n       dara=pass header.i=@gmail.com",
+            "dkim-signature": "DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;\r\n        d=gmail.com; s=20230601; t=1752648323; x=1753253123; dara=google.com;\r\n        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject\r\n         :date:message-id:reply-to;\r\n        bh=ohqOF59LV9BZtR9gWnEidTemYZxav1bDteQ3QltEewE=;\r\n        b=bONdhu7JoYT8RlLFhe6eHtX+F+zT/bLmea4JY6CqCuvI6muWrqeLtcXetjvU/d5hZ4\r\n         ci2Uo9D9FV2DaugxH0dTfwHvGe0AQto7OaWXFAwUoLWdyj8KtAftq9r7GG17Aua0z+LN\r\n         me9pZ9MaxF7mbOwqxY9rJel9pz5XNELxx/yXV6bWbFlBOoCA+NXoHe3xO6Nx/g843OZa\r\n         ICosoQOWoGB5VrY5SY1L2hCqePX3kVs8y+BJKn4aNxtKl8WZObJ5UdJZtgUOuPHRFWL3\r\n         iW9fG1g6zLYJK/rxSCV9E5p+wrYo0zcxgSZjOusoxhofoEFURMkWzwCS0gBdO5FutX9U\r\n         Yt0Q==",
+            "x-google-dkim-signature": "X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;\r\n        d=1e100.net; s=20230601; t=1752648323; x=1753253123;\r\n        h=to:subject:message-id:date:from:mime-version:x-gm-message-state\r\n         :from:to:cc:subject:date:message-id:reply-to;\r\n        bh=ohqOF59LV9BZtR9gWnEidTemYZxav1bDteQ3QltEewE=;\r\n        b=C65AtLfFgXjPNTlPgg32e1gD6seg4BxlQjOXCCoS1tDjrzlVm77E6EqpQzXjLti2oi\r\n         5lyirEheJMVrd+vD2HcYXCuDtZk0BS9rcHKH6RApYZblkj88s+S9MBTxyuBKivGY2aER\r\n         7uXGM7h6+bYctXtxaI1H5aEYPRU4dk1rDqIPnWEbci9xQ35oqe9xIPBipyReg7in0q0s\r\n         lY1dOzjcRSwnjaT3F/UM6Rl7UNyqsNaXtAwgqySqw+2Ik4U9tbYIMY+/6152qu3LpGGD\r\n         1Rvd1IV6f/cVWxCMmtz525hserlapCVrui+VgyhmghVCETopylxZznHzMs5W8CAuwgBD\r\n         MIuA==",
+            "x-gm-message-state": "X-Gm-Message-State: AOJu0Yw8q2W6uH9kMPs2kekW3S7hpiJyuGqXwNE96maoONlt0+bTmjAH\r\n\teYMr+HoP1Sz0iRzpt+1r8PYxtV3GimVW/A2s076YFVBEud0nrc+2EjQGCYCKPGT0gzL4Ny+X1BF\r\n\tN23xDEsQlT41Uoz+HKOOdp1GHGm8aRYgvG/Ie",
+            "x-gm-gg": "X-Gm-Gg: ASbGncuEUiEQbZFHRgjMfQdHoHDFAfqUCvaAtwkzObRMB1nwiWIUFKZE2DrW3Xiiq71\r\n\tdn51MkJF8/9Tg4btBAiohMjIMWAuX3Xh2fRtOcopQpZ75BS+v8Y3d+7RNG6hHCsRnAw8qbY/LqO\r\n\teGc4hPLUSqxJJjQ5t+d2p2YW9HkHtr1MGBi9Oxis8Q8u5wzOUVGZFIguwgRMcbW8HrjhfAoJSQJ\r\n\tS6t3uE=",
+            "x-google-smtp-source": "X-Google-Smtp-Source: AGHT+IFEiV/wVDEHB7jVnDsBiyB7t4vx/ktGZqxGjaluwxHfDKQojYlC0td6vO347Qus1zlezC6M7zqwPsmwDNiNFvc=",
+            "mime-version": "MIME-Version: 1.0",
+            "from": "From: Omoike Oluwatofunmi <oluwatofunmiomoike@gmail.com>",
+            "date": "Date: Wed, 16 Jul 2025 07:45:11 +0100",
+            "x-gm-features": "X-Gm-Features: Ac12FXynNUeswE__XFMSuPeeaLiigYhNoScEXJ6h9Y0xf34PG9YB08BxBeSLSFI",
+            "message-id": "Message-ID: <CAHeew5JG8uja=h0mpUP5UOWXb7iz13hBFrwF6p2qM+--TDz2jg@mail.gmail.com>",
+            "subject": "Subject: ",
+            "to": "To: jesutofunmiomoike@gmail.com",
+            "content-type": "Content-Type: multipart/alternative; boundary=\"000000000000b214d2063a063c46\""
+          },
+          "html": "<div dir=\"auto\">I want to make some enquiries </div>\n",
+          "text": "I want to make some enquiries\n",
+          "textAsHtml": "<p>I want to make some enquiries</p>",
+          "date": "2025-07-16T06:45:11.000Z",
+          "to": {
+            "value": [
+              {
+                "address": "jesutofunmiomoike@gmail.com",
+                "name": ""
+              }
+            ],
+            "html": "<span class=\"mp_address_group\"><a href=\"mailto:jesutofunmiomoike@gmail.com\" class=\"mp_address_email\">jesutofunmiomoike@gmail.com</a></span>",
+            "text": "jesutofunmiomoike@gmail.com"
+          },
+          "from": {
+            "value": [
+              {
+                "address": "oluwatofunmiomoike@gmail.com",
+                "name": "Omoike Oluwatofunmi"
+              }
+            ],
+            "html": "<span class=\"mp_address_group\"><span class=\"mp_address_name\">Omoike Oluwatofunmi</span> &lt;<a href=\"mailto:oluwatofunmiomoike@gmail.com\" class=\"mp_address_email\">oluwatofunmiomoike@gmail.com</a>&gt;</span>",
+            "text": "\"Omoike Oluwatofunmi\" <oluwatofunmiomoike@gmail.com>"
+          },
+          "messageId": "<CAHeew5JG8uja=h0mpUP5UOWXb7iz13hBFrwF6p2qM+--TDz2jg@mail.gmail.com>"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings HuggingFace Inference": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Add label to message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add label to message": {
+      "main": [
+        [
+          {
+            "node": "Reply to a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7fccfe75-f1cf-41e3-9c01-7de9462f73b5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "93ea534fcccca1a9a6480fcae69e67fae47cdbdc1d2f2c73a05de7ee28004308"
+  },
+  "id": "HA9qet62aEMlLrA7",
+  "tags": []
+}
